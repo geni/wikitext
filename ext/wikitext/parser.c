@@ -130,12 +130,20 @@ const char gt_entity[]                  = "&gt;";
 const char escaped_blockquote[]         = "&gt; ";
 const char ext_link_end[]               = "]";
 const char literal_img_start[]          = "{{";
-const char img_start[]                  = "<img src=\"";
-const char img_end_xml[]                = "\" />";
-const char img_end_html[]               = "\">";
-const char img_alt[]                    = "\" alt=\"";
+const char img_start[]                  = "<img  class=\"wikitext-image\" src=\"";
+const char img_end_xml[]                = " />";
+const char img_end_html[]               = ">";
+const char img_alt[]                    = " alt=\"";
 const char pre_class_start[]            = "<pre class=\"";
 const char pre_class_end[]              = "-syntax\">";
+const char figure_start[]               = "<figure class=\"wikitext-figure";
+const char figure_start_close[]         = "\">";
+const char figure_end[]                 = "</figure>";
+const char figcaption_start[]           = "<figcaption class=\"wikitext-figcaption\">";
+const char figcaption_end[]             = "</figcaption>";
+
+const char* img_classes[]               = {"frameless", "frame", "thumb", "border", "right", "left", "center", "none",
+                                           "baseline", "middle", "sub", "super", "text-top", "text-bottom", "top", "bottom"};
 
 // Mark the parser struct designated by ptr as a participant in Ruby's
 // mark-and-sweep garbage collection scheme. A variable named name is placed on
@@ -478,16 +486,125 @@ void wiki_append_hyperlink(parser_t *parser, VALUE link_prefix, str_t *link_targ
 
 void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
 {
-    str_append(parser->output, img_start, sizeof(img_start) - 1);           // <img src="
-    if (!NIL_P(parser->img_prefix) && *token_ptr != '/')                    // len always > 0
+    bool skip_prefix = (*token_ptr == '/');
+    char* src_ptr = token_ptr;
+    int src_len = token_len;
+
+    str_append(parser->output, figure_start, sizeof(figure_start) - 1);     // <figure class="wikitext-figure
+    char* opt_ptr = strchr(src_ptr, separator[0]);
+    int opt_len;
+    if (opt_ptr)
+    {
+        opt_len = token_len - (opt_ptr - src_ptr);
+        src_len = token_len - opt_len;
+    }
+
+    char* alt_ptr = token_ptr;
+    char* width_ptr = NULL;
+    char* height_ptr = NULL;
+    char* caption_ptr = NULL;
+
+    if (opt_ptr)
+    {
+        str_append(parser->output, " ", 1);
+        opt_ptr = strtok(opt_ptr, separator);
+
+        while(opt_ptr)
+        {
+            if (strncmp("alt=", opt_ptr, 4) == 0)
+            {
+                alt_ptr = opt_ptr + 4 * sizeof(char);
+            }
+            else if (strlen(opt_ptr) > 2 * sizeof(char) && strncmp("px", opt_ptr + strlen(opt_ptr) - 2 * sizeof(char), 2) == 0)
+            {
+                opt_ptr[strlen(opt_ptr) - 2 * sizeof(char)] = '\0';
+
+                width_ptr = opt_ptr;
+                height_ptr = strchr(width_ptr, 'x');
+
+                if (height_ptr)
+                {
+                    *height_ptr = '\0';
+                    height_ptr = height_ptr + sizeof(char);
+                }
+            }
+            else
+            {
+                int class_match = -1;
+
+                for (int ic=0; ic < sizeof(img_classes) / sizeof(char*) ; ic++)
+                {
+                    if (strncmp(img_classes[ic], opt_ptr, strlen(img_classes[ic])) == 0)
+                    {
+                        class_match = ic;
+                        break;
+                    }
+                }
+
+                if (class_match >= 0)
+                {
+                    str_append(parser->output, " wi-", 4);
+                    str_append(parser->output, img_classes[class_match], strlen(img_classes[class_match]));
+                }
+                else // treat as Caption text
+                {
+                    caption_ptr = opt_ptr;
+                }
+            }
+
+            opt_ptr = strtok(NULL, separator);
+        }
+    }
+
+    str_append(parser->output, figure_start_close, sizeof(figure_start_close) - 1);     // ">
+
+    str_append(parser->output, img_start, sizeof(img_start) - 1);       // <img class="wikitext-image" src="
+
+    if (!NIL_P(parser->img_prefix) && !skip_prefix)                     // len always > 0
         str_append_string(parser->output, parser->img_prefix);
-    str_append(parser->output, token_ptr, token_len);
-    str_append(parser->output, img_alt, sizeof(img_alt) - 1);               // " alt="
-    str_append(parser->output, token_ptr, token_len);
+
+    str_append(parser->output, src_ptr, src_len);
+    str_append(parser->output, quote, sizeof(quote) - 1);               // "
+
+    if (width_ptr && atoi(width_ptr) > 0)
+    {
+        str_append(parser->output, " width=", 7);
+        str_append(parser->output, width_ptr, strlen(width_ptr));
+        str_append(parser->output, "px", 2);
+    }
+
+    if (height_ptr && atoi(height_ptr) > 0)
+    {
+        str_append(parser->output, " height=", 8);
+        str_append(parser->output, height_ptr, strlen(height_ptr));
+        str_append(parser->output, "px", 2);
+    }
+
+    if (caption_ptr && strlen(caption_ptr) > 0)
+    {
+        str_append(parser->output, " data-wi-caption=\"", 18);
+        str_append(parser->output, caption_ptr, strlen(caption_ptr));
+        str_append(parser->output, quote, sizeof(quote) - 1);
+    }
+
+    str_append(parser->output, img_alt, sizeof(img_alt) - 1);               //  alt="
+    str_append(parser->output, alt_ptr, strlen(alt_ptr));
+    str_append(parser->output, quote, sizeof(quote) - 1);                   // "
+
     if (parser->output_style == XML_OUTPUT)
-        str_append(parser->output, img_end_xml, sizeof(img_end_xml) - 1);   // " />
+        str_append(parser->output, img_end_xml, sizeof(img_end_xml) - 1);   //  />
     else
-        str_append(parser->output, img_end_html, sizeof(img_end_html) - 1); // ">
+        str_append(parser->output, img_end_html, sizeof(img_end_html) - 1); // >
+
+
+    if (caption_ptr && strlen(caption_ptr) > 0)
+    {
+        str_append(parser->output, figcaption_start, sizeof(figcaption_start) - 1);  // <figcaption>
+        str_append(parser->output, caption_ptr, strlen(caption_ptr));
+        str_append(parser->output, figcaption_end, sizeof(figcaption_end) - 1);  // </figcaption>
+    }
+
+    str_append(parser->output, figure_end, sizeof(figure_end) - 1);     // </figure>
 }
 
 // will emit indentation only if we are about to emit any of:
@@ -2436,7 +2553,7 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
                     // will cheat here and abuse the link_target capture buffer to accumulate text
                     while (NEXT_TOKEN(), (type = token->type))
                     {
-                        if (type == PATH || type == PRINTABLE || type == ALNUM || type == SPECIAL_URI_CHARS)
+                        if (type == PATH || type == PRINTABLE || type == ALNUM || type == SPECIAL_URI_CHARS || type == SEPARATOR || type == SPACE)
                             str_append(parser->link_target, token->start, TOKEN_LEN(token));
                         else if (type == IMG_END && parser->link_target->len > 0)
                         {

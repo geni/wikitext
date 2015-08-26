@@ -486,20 +486,21 @@ void wiki_append_hyperlink(parser_t *parser, VALUE link_prefix, str_t *link_targ
 
 void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
 {
-    bool skip_prefix = (*token_ptr == '/');
-    char* src_ptr = token_ptr;
-    int src_len = token_len;
+    str_t* full_token = str_new_copy(token_ptr, token_len);
+    full_token->ptr[token_len] = '\0';  // take advantage of STR_OVERALLOC to null-terminate the string
+
+    bool skip_prefix = (*full_token->ptr == '/');
+    char* src_ptr = full_token->ptr;
 
     str_append(parser->output, figure_start, sizeof(figure_start) - 1);     // <figure class="wikitext-figure
     char* opt_ptr = strchr(src_ptr, separator[0]);
-    int opt_len;
     if (opt_ptr)
     {
-        opt_len = token_len - (opt_ptr - src_ptr);
-        src_len = token_len - opt_len;
+        *opt_ptr = '\0';
+        opt_ptr = opt_ptr + sizeof(char);
     }
 
-    char* alt_ptr = token_ptr;
+    char* alt_ptr = full_token->ptr;
     char* width_ptr = NULL;
     char* height_ptr = NULL;
     char* caption_ptr = NULL;
@@ -563,7 +564,7 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
     if (!NIL_P(parser->img_prefix) && !skip_prefix)                     // len always > 0
         str_append_string(parser->output, parser->img_prefix);
 
-    str_append(parser->output, src_ptr, src_len);
+    str_append(parser->output, src_ptr, strlen(src_ptr));
     str_append(parser->output, quote, sizeof(quote) - 1);               // "
 
     if (width_ptr && atoi(width_ptr) > 0)
@@ -605,6 +606,8 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
     }
 
     str_append(parser->output, figure_end, sizeof(figure_end) - 1);     // </figure>
+
+    str_free(full_token);
 }
 
 // will emit indentation only if we are about to emit any of:

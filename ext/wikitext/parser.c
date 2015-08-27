@@ -136,11 +136,11 @@ const char img_end_html[]               = ">";
 const char img_alt[]                    = " alt=\"";
 const char pre_class_start[]            = "<pre class=\"";
 const char pre_class_end[]              = "-syntax\">";
-const char figure_start[]               = "<figure class=\"wikitext-figure";
+const char figure_start[]               = "<span class=\"wikitext-figure";
 const char figure_start_close[]         = "\">";
-const char figure_end[]                 = "</figure>";
-const char figcaption_start[]           = "<figcaption class=\"wikitext-figcaption\">";
-const char figcaption_end[]             = "</figcaption>";
+const char figure_end[]                 = "</span>";
+const char figcaption_start[]           = "<span class=\"wikitext-figcaption\">";
+const char figcaption_end[]             = "</span>";
 
 const char* img_classes[]               = {"frameless", "frame", "thumb", "border", "right", "left", "center", "none",
                                            "baseline", "middle", "sub", "super", "text-top", "text-bottom", "top", "bottom"};
@@ -501,6 +501,7 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
     }
 
     char* alt_ptr = full_token->ptr;
+    char* link_ptr = NULL;
     char* width_ptr = NULL;
     char* height_ptr = NULL;
     char* caption_ptr = NULL;
@@ -515,6 +516,10 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
             if (strncmp("alt=", opt_ptr, 4) == 0)
             {
                 alt_ptr = opt_ptr + 4 * sizeof(char);
+            }
+            else if (strncmp("link=", opt_ptr, 5) == 0)
+            {
+                link_ptr = opt_ptr + 5 * sizeof(char);
             }
             else if (strlen(opt_ptr) > 2 * sizeof(char) && strncmp("px", opt_ptr + strlen(opt_ptr) - 2 * sizeof(char), 2) == 0)
             {
@@ -559,6 +564,15 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
 
     str_append(parser->output, figure_start_close, sizeof(figure_start_close) - 1);     // ">
 
+    if (link_ptr && strlen(link_ptr) > 0)
+    {
+        str_append(parser->output, a_start, sizeof(a_start) - 1);       // <a href="
+        str_append(parser->output, link_ptr, strlen(link_ptr));
+        str_append(parser->output, a_class, sizeof(a_class) - 1);       // " class="
+        str_append(parser->output, "wi-link", 7);
+        str_append(parser->output, a_start_close, sizeof(a_start_close) - 1);  // ">
+    }
+
     str_append(parser->output, img_start, sizeof(img_start) - 1);       // <img class="wikitext-image" src="
 
     if (!NIL_P(parser->img_prefix) && !skip_prefix)                     // len always > 0
@@ -597,13 +611,15 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
     else
         str_append(parser->output, img_end_html, sizeof(img_end_html) - 1); // >
 
-
     if (caption_ptr && strlen(caption_ptr) > 0)
     {
         str_append(parser->output, figcaption_start, sizeof(figcaption_start) - 1);  // <figcaption>
         str_append(parser->output, caption_ptr, strlen(caption_ptr));
         str_append(parser->output, figcaption_end, sizeof(figcaption_end) - 1);  // </figcaption>
     }
+
+    if (link_ptr && strlen(link_ptr) > 0)
+        str_append(parser->output, a_end, sizeof(a_end) - 1);       // </a>
 
     str_append(parser->output, figure_end, sizeof(figure_end) - 1);     // </figure>
 

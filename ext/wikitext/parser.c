@@ -97,7 +97,8 @@ const char ul_end[]                     = "</ul>";
 const char li_start[]                   = "<li>";
 const char li_end[]                     = "</li>";
 const char hr[]                         = "<hr class=\"wikitext-hr\" />";
-const char br[]                         = "<br/>";
+const char br[]                         = "<br class=\"wikitext-br\" />";
+const char br_clear[]                   = "<br class=\"wikitext-br clear\" />";
 const char escaped_br[]                 = "&lt;br/&gt;";
 const char h6_start[]                   = "<h6>";
 const char h6_end[]                     = "</h6>";
@@ -769,6 +770,10 @@ void wiki_pop_from_stack(parser_t *parser, str_t *target)
 
         case BR:
             str_append(target, br, sizeof(br) - 1);
+            break;
+
+        case BR_CLEAR:
+            str_append(target, br_clear, sizeof(br_clear) - 1);
             break;
 
         case H6_START:
@@ -2031,6 +2036,14 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
                     str_append(parser->output, escaped_br, sizeof(escaped_br) - 1);
                 else
                     str_append(parser->output, br, sizeof(br) - 1);
+
+                break;
+
+            case BR_CLEAR:
+                if (IN_ANY_OF(NO_WIKI_START, PRE, PRE_START))
+                    str_append(parser->output, token->start, TOKEN_LEN(token));
+                else
+                    str_append(parser->output, br_clear, sizeof(br_clear) - 1);
 
                 break;
 

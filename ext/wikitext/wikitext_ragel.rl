@@ -246,7 +246,13 @@
             fbreak;
         };
 
-        "<br/>"i
+        "<br clear"i punct* alnum* punct* ">"
+        {
+            EMIT(BR_CLEAR);
+            fbreak;
+        };
+
+        "<br"i space* punct* ">"
         {
             EMIT(BR);
             fbreak;

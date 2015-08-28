@@ -66,6 +66,7 @@ enum token_types {
     UL,
     HR,
     BR,
+    BR_CLEAR,
 
     // keep these consecutive, and in ascending order
     // (the arithmetic for the base_heading_level feature assumes this)

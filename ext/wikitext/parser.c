@@ -96,6 +96,9 @@ const char ul_start[]                   = "<ul>";
 const char ul_end[]                     = "</ul>";
 const char li_start[]                   = "<li>";
 const char li_end[]                     = "</li>";
+const char hr[]                         = "<hr class=\"wikitext-hr\" />";
+const char br[]                         = "<br/>";
+const char escaped_br[]                 = "&lt;br/&gt;";
 const char h6_start[]                   = "<h6>";
 const char h6_end[]                     = "</h6>";
 const char h5_start[]                   = "<h5>";
@@ -538,7 +541,7 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
             {
                 int class_match = -1;
 
-                for (int ic=0; ic < sizeof(img_classes) / sizeof(char*) ; ic++)
+                for (unsigned int ic=0; ic < sizeof(img_classes) / sizeof(char*) ; ic++)
                 {
                     if (strncmp(img_classes[ic], opt_ptr, strlen(img_classes[ic])) == 0)
                     {
@@ -758,6 +761,14 @@ void wiki_pop_from_stack(parser_t *parser, str_t *target)
             str_append(target, li_end, sizeof(li_end) - 1);
             str_append_str(target, parser->line_ending);
             wiki_dedent(parser, false);
+            break;
+
+        case HR:
+            str_append(target, hr, sizeof(hr) - 1);
+            break;
+
+        case BR:
+            str_append(target, br, sizeof(br) - 1);
             break;
 
         case H6_START:
@@ -2006,6 +2017,22 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
 
                 // jump to top of the loop to process token we scanned during lookahead
                 continue;
+
+            case HR:
+                if (IN_ANY_OF(NO_WIKI_START, PRE, PRE_START))
+                    str_append(parser->output, token->start, TOKEN_LEN(token));
+                else
+                    str_append(parser->output, hr, sizeof(hr) - 1);
+
+                break;
+
+            case BR:
+                if (IN_ANY_OF(NO_WIKI_START, PRE, PRE_START))
+                    str_append(parser->output, escaped_br, sizeof(escaped_br) - 1);
+                else
+                    str_append(parser->output, br, sizeof(br) - 1);
+
+                break;
 
             case H6_START:
             case H5_START:

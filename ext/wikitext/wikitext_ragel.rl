@@ -240,6 +240,18 @@
             fbreak;
         };
 
+        "-"{4,25}
+        {
+            EMIT(HR);
+            fbreak;
+        };
+
+        "<br/>"i
+        {
+            EMIT(BR);
+            fbreak;
+        };
+
         '='+ @mark ' '*
         {
             if (out->column_start == 1 || last_token_type == BLOCKQUOTE || last_token_type == BLOCKQUOTE_START)

@@ -145,6 +145,7 @@ const char pre_class_start[]            = "<pre class=\"";
 const char pre_class_end[]              = "-syntax\">";
 const char figure_start[]               = "<span class=\"wikitext-figure";
 const char figure_start_close[]         = "\">";
+const char figure_inner[]               = "<span class=\"wikitext-figure-inner\">";
 const char figure_end[]                 = "</span>";
 const char figcaption_start[]           = "<span class=\"wikitext-figcaption\">";
 const char figcaption_end[]             = "</span>";
@@ -571,6 +572,8 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
 
     str_append(parser->output, figure_start_close, sizeof(figure_start_close) - 1);     // ">
 
+    str_append(parser->output, figure_inner, sizeof(figure_inner) - 1);     // <span class="wikitext-figure-inner">
+
     if (link_ptr && strlen(link_ptr) > 0)
     {
         str_append(parser->output, a_start, sizeof(a_start) - 1);       // <a href="
@@ -618,17 +621,32 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
     else
         str_append(parser->output, img_end_html, sizeof(img_end_html) - 1); // >
 
-    if (caption_ptr && strlen(caption_ptr) > 0)
-    {
-        str_append(parser->output, figcaption_start, sizeof(figcaption_start) - 1);  // <figcaption>
-        str_append(parser->output, caption_ptr, strlen(caption_ptr));
-        str_append(parser->output, figcaption_end, sizeof(figcaption_end) - 1);  // </figcaption>
-    }
-
     if (link_ptr && strlen(link_ptr) > 0)
         str_append(parser->output, a_end, sizeof(a_end) - 1);       // </a>
 
-    str_append(parser->output, figure_end, sizeof(figure_end) - 1);     // </figure>
+    if (caption_ptr && strlen(caption_ptr) > 0)
+    {
+        str_append(parser->output, figcaption_start, sizeof(figcaption_start) - 1);  // <span class="wikitext-figcaption">
+
+        if (link_ptr && strlen(link_ptr) > 0)
+        {
+            str_append(parser->output, a_start, sizeof(a_start) - 1);       // <a href="
+            str_append(parser->output, link_ptr, strlen(link_ptr));
+            str_append(parser->output, a_class, sizeof(a_class) - 1);       // " class="
+            str_append(parser->output, "wi-link", 7);
+            str_append(parser->output, a_start_close, sizeof(a_start_close) - 1);  // ">
+        }
+
+        str_append(parser->output, caption_ptr, strlen(caption_ptr));
+
+        if (link_ptr && strlen(link_ptr) > 0)
+            str_append(parser->output, a_end, sizeof(a_end) - 1);       // </a>
+
+        str_append(parser->output, figcaption_end, sizeof(figcaption_end) - 1);  // </span> (figcaption)
+    }
+
+    str_append(parser->output, figure_end, sizeof(figure_end) - 1);     // </span>  (figure-inner)
+    str_append(parser->output, figure_end, sizeof(figure_end) - 1);     // </span>  (figure)
 
     str_free(full_token);
 }

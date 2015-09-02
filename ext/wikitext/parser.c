@@ -73,6 +73,8 @@ const char escaped_em_start[]           = "&lt;em&gt;";
 const char escaped_em_end[]             = "&lt;/em&gt;";
 const char escaped_strong_start[]       = "&lt;strong&gt;";
 const char escaped_strong_end[]         = "&lt;/strong&gt;";
+const char escaped_span_start[]         = "&lt;span&gt;";
+const char escaped_span_end[]           = "&lt;/span&gt;";
 const char escaped_tt_start[]           = "&lt;tt&gt;";
 const char escaped_tt_end[]             = "&lt;/tt&gt;";
 const char pre_start[]                  = "<pre>";
@@ -86,6 +88,7 @@ const char escaped_blockquote_end[]     = "&lt;/blockquote&gt;";
 const char strong_em_start[]            = "<strong><em>";
 const char strong_start[]               = "<strong>";
 const char strong_end[]                 = "</strong>";
+const char span_end[]                   = "</span>";
 const char em_start[]                   = "<em>";
 const char em_end[]                     = "</em>";
 const char code_start[]                 = "<code>";
@@ -764,18 +767,6 @@ void wiki_pop_from_stack(parser_t *parser, str_t *target)
             wiki_dedent(parser, false);
             break;
 
-        case HR:
-            str_append(target, hr, sizeof(hr) - 1);
-            break;
-
-        case BR:
-            str_append(target, br, sizeof(br) - 1);
-            break;
-
-        case BR_CLEAR:
-            str_append(target, br_clear, sizeof(br_clear) - 1);
-            break;
-
         case H6_START:
             str_append(target, h6_end, sizeof(h6_end) - 1);
             str_append_str(target, parser->line_ending);
@@ -1356,6 +1347,8 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
         str_t *output               = NULL;
         str_t _token_str;
         str_t *token_str            = &_token_str;
+        str_t *sub_str;
+        char  *p_substring;
 
         // The following giant switch statement contains cases for all the possible token types.
         // In the most basic sense we are emitting the HTML that corresponds to each token,
@@ -2045,6 +2038,52 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
                 else
                     str_append(parser->output, br_clear, sizeof(br_clear) - 1);
 
+                break;
+
+            case SPAN_START:
+                if (IN_ANY_OF(NO_WIKI_START, PRE, PRE_START))
+                    str_append(parser->output, escaped_span_start, sizeof(escaped_span_start) - 1);
+                else
+                {
+                    wiki_pop_excess_elements(parser);
+                    wiki_start_para_if_necessary(parser);
+
+                    i = 0;  // disallow JavaScript injection with " on"* handlers; use i a flag to abort
+
+                    if (strstr(token->start, "&#32") != NULL) // why UTF-8 encode a space?  up to no good!
+                        i = 1;
+                    else
+                    {
+                        // token is not NULL-terminated at TOKEN_LEN so make a null-terminated copy for strtok
+                        sub_str = str_new_copy(token->start, TOKEN_LEN(token));
+                        p_substring = strtok(sub_str->ptr, " ");
+
+                        while (p_substring != NULL)
+                        {
+                            if (strncasecmp(p_substring, "on", 2) == 0) // " on*" inside a span is almost certainly JavaScript injection
+                            {
+                                i = 1;
+                                break;
+                            }
+                            p_substring = strtok(NULL, " ");
+                        }
+
+                        str_free(sub_str);
+                    }
+
+
+                    if (i == 0)
+                        str_append(parser->output, token->start, TOKEN_LEN(token));
+                    else  // you get a plain span
+                        str_append(parser->output, "<span>", 6*sizeof(char));
+                }
+                break;
+
+            case SPAN_END:
+                if (IN_ANY_OF(NO_WIKI_START, PRE, PRE_START))
+                    str_append(parser->output, escaped_span_end, sizeof(escaped_span_end) - 1);
+                else
+                    str_append(parser->output, token->start, TOKEN_LEN(token));
                 break;
 
             case H6_START:

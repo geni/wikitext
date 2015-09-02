@@ -83,6 +83,7 @@
     uri                 = ('mailto:'i mail) |
                           (('http'i [sS]? '://' | 'ftp://'i | 'svn://'i) uri_chars (special_uri_chars uri_chars)*) ;
     path                = '/' ([a-zA-Z0-9_\-.]+ '/'?)* ;
+    tag_attrs           = (alnum | space | [@$&'\"\*\+=%_~/#-:;\.])* ;
 
     main := |*
 
@@ -255,6 +256,18 @@
         "<br"i space* punct* ">"
         {
             EMIT(BR);
+            fbreak;
+        };
+
+        "<span"i tag_attrs ">"
+        {
+            EMIT(SPAN_START);
+            fbreak;
+        };
+
+        '</span>'i
+        {
+            EMIT(SPAN_END);
             fbreak;
         };
 

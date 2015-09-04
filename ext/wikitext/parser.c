@@ -2671,6 +2671,8 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
                     {
                         if (type == PATH || type == PRINTABLE || type == ALNUM || type == SPECIAL_URI_CHARS || type == SEPARATOR || type == SPACE)
                             str_append(parser->link_target, token->start, TOKEN_LEN(token));
+                        else if (*token->start == '&')
+                            str_append(parser->link_target, token->start, TOKEN_LEN(token));
                         else if (type == IMG_END && parser->link_target->len > 0)
                         {
                             // success

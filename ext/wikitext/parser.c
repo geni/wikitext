@@ -149,6 +149,8 @@ const char figure_inner[]               = "<span class=\"wikitext-figure-inner\"
 const char figure_end[]                 = "</span>";
 const char figcaption_start[]           = "<span class=\"wikitext-figcaption\">";
 const char figcaption_end[]             = "</span>";
+const char https_protocol[]             = "https://";
+const char http_protocol[]              = "http://";
 
 const char* img_classes[]               = {"frameless", "frame", "thumb", "border", "right", "left", "center", "none",
                                            "baseline", "middle", "sub", "super", "text-top", "text-bottom", "top", "bottom"};
@@ -588,9 +590,9 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
     if (!NIL_P(parser->img_prefix) && !skip_prefix)                     // len always > 0
         str_append_string(parser->output, parser->img_prefix);
     else if (strncmp("///", src_ptr, 3) == 0)
-        str_append_string(parser->output, "https://");
+        str_append(parser->output, https_protocol, sizeof(https_protocol) - 1);
     else
-        str_append_string(parser->output, "http://");
+        str_append(parser->output, "http://", sizeof(http_protocol) - 1);
 
     str_append(parser->output, src_ptr, strlen(src_ptr));
     str_append(parser->output, quote, sizeof(quote) - 1);               // "

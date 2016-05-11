@@ -587,6 +587,10 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
 
     if (!NIL_P(parser->img_prefix) && !skip_prefix)                     // len always > 0
         str_append_string(parser->output, parser->img_prefix);
+    else if (strncmp("///", src_ptr, 3) == 0)
+        str_append_string(parser->output, "https://");
+    else
+        str_append_string(parser->output, "http://");
 
     str_append(parser->output, src_ptr, strlen(src_ptr));
     str_append(parser->output, quote, sizeof(quote) - 1);               // "

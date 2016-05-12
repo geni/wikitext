@@ -139,7 +139,7 @@ const char ext_link_end[]               = "]";
 const char literal_img_start[]          = "{{";
 const char img_start[]                  = "<img  class=\"wikitext-image\" src=\"";
 const char img_start_http[]             = "<img  class=\"wikitext-image\" src=\"http://";
-const char img_start_https[]            = "<img  class=\"wikitext-image\" src=\"http://";
+const char img_start_https[]            = "<img  class=\"wikitext-image\" src=\"https://";
 const char img_end_xml[]                = " />";
 const char img_end_html[]               = ">";
 const char img_alt[]                    = " alt=\"";

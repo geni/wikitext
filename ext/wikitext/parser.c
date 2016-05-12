@@ -2672,6 +2672,8 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
             case IMG_START:
             case IMG_START_HTTP:
             case IMG_START_HTTPS:
+                int img_start_type = type;
+
                 if (IN_ANY_OF(NO_WIKI_START, PRE, PRE_START))
                 {
                     wiki_emit_pending_crlf_if_necessary(parser);
@@ -2696,7 +2698,7 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
                         else if (type == IMG_END && parser->link_target->len > 0)
                         {
                             // success
-                            wiki_append_img(parser, parser->link_target->ptr, parser->link_target->len, type);
+                            wiki_append_img(parser, parser->link_target->ptr, parser->link_target->len, img_start_type);
                             token = NULL;
                             break;
                         }

@@ -2694,7 +2694,7 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
                         else if (type == IMG_END && parser->link_target->len > 0)
                         {
                             // success
-                            wiki_append_img(parser, parser->link_target->ptr, parser->link_target->len);
+                            wiki_append_img(parser, parser->link_target->ptr, parser->link_target->len, token->type);
                             token = NULL;
                             break;
                         }

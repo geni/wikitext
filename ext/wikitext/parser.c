@@ -138,6 +138,8 @@ const char escaped_blockquote[]         = "&gt; ";
 const char ext_link_end[]               = "]";
 const char literal_img_start[]          = "{{";
 const char img_start[]                  = "<img  class=\"wikitext-image\" src=\"";
+const char img_start_http[]             = "<img  class=\"wikitext-image\" src=\"http://";
+const char img_start_https[]            = "<img  class=\"wikitext-image\" src=\"http://";
 const char img_end_xml[]                = " />";
 const char img_end_html[]               = ">";
 const char img_alt[]                    = " alt=\"";
@@ -494,7 +496,7 @@ void wiki_append_hyperlink(parser_t *parser, VALUE link_prefix, str_t *link_targ
     }
 }
 
-void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
+void wiki_append_img(parser_t *parser, char *token_ptr, long token_len, int token_type)
 {
     str_t* full_token = str_new_copy(token_ptr, token_len);
     full_token->ptr[token_len] = '\0';  // take advantage of STR_OVERALLOC to null-terminate the string
@@ -585,14 +587,22 @@ void wiki_append_img(parser_t *parser, char *token_ptr, long token_len)
         str_append(parser->output, a_start_close, sizeof(a_start_close) - 1);  // ">
     }
 
-    str_append(parser->output, img_start, sizeof(img_start) - 1);       // <img class="wikitext-image" src="
+    switch(token_type)
+    {
+        case IMG_START:
+            str_append(parser->output, img_start, sizeof(img_start) - 1);               // <img class="wikitext-image" src="
 
-    if (!NIL_P(parser->img_prefix) && !skip_prefix)                     // len always > 0
-        str_append_string(parser->output, parser->img_prefix);
-    else if (strncmp("///", src_ptr, 3) == 0)
-        str_append(parser->output, https_protocol, sizeof(https_protocol) - 1);
-    else
-        str_append(parser->output, "http://", sizeof(http_protocol) - 1);
+            if (!NIL_P(parser->img_prefix) && !skip_prefix)                             // len always > 0
+                str_append_string(parser->output, parser->img_prefix);
+
+            break;
+        case IMG_START_HTTP:
+            str_append(parser->output, img_start_http, sizeof(img_start_http) - 1);     // <img class="wikitext-image" src="http://
+            break;
+        case IMG_START_HTTPS:
+            str_append(parser->output, img_start_https, sizeof(img_start_https) - 1);   // <img class="wikitext-image" src="https://
+            break;
+    }
 
     str_append(parser->output, src_ptr, strlen(src_ptr));
     str_append(parser->output, quote, sizeof(quote) - 1);               // "
@@ -2388,6 +2398,8 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
                             type == AMP                 ||
                             type == AMP_ENTITY          ||
                             type == IMG_START           ||
+                            type == IMG_START_HTTP      ||
+                            type == IMG_START_HTTPS     ||
                             type == IMG_END             ||
                             type == LEFT_CURLY          ||
                             type == RIGHT_CURLY)

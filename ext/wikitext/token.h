@@ -106,6 +106,8 @@ enum token_types {
     LESS,
     GREATER,
     IMG_START,
+    IMG_START_HTTP,
+    IMG_START_HTTPS,
     IMG_END,
     LEFT_CURLY,
     RIGHT_CURLY,

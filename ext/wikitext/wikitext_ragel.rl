@@ -426,6 +426,18 @@
             fbreak;
         };
 
+        '{{http://'
+        {
+            EMIT(IMG_START_HTTP);
+            fbreak;
+        };
+
+        '{{https://'
+        {
+            EMIT(IMG_START_HTTPS);
+            fbreak;
+        };
+
         '{{'
         {
             EMIT(IMG_START);

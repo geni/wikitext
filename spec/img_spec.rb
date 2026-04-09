@@ -29,30 +29,30 @@ describe Wikitext::Parser, 'embedding img tags' do
   end
 
   it 'should convert valid markup into inline image tags' do
-    expected = %Q{<p><img src="/images/foo.png" alt="foo.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></p>\n}
     @parser.parse('{{foo.png}}').should == expected
   end
 
   it 'should produce XML output if passed option at parse time' do
-    expected = %Q{<p><img src="/images/foo.png" alt="foo.png" /></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png" /></span></span></p>\n}
     @parser.parse('{{foo.png}}', :output_style => :xml).should == expected
   end
 
   it 'should produce XML output if set via instance variable' do
-    expected = %Q{<p><img src="/images/foo.png" alt="foo.png" /></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png" /></span></span></p>\n}
     parser = Wikitext::Parser.new
     parser.output_style = :xml
     parser.parse('{{foo.png}}').should == expected
   end
 
   it 'should produce XML output if option set during initialization' do
-    expected = %Q{<p><img src="/images/foo.png" alt="foo.png" /></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png" /></span></span></p>\n}
     parser = Wikitext::Parser.new :output_style => :xml
     parser.parse('{{foo.png}}').should == expected
   end
 
   it 'should produce HTML output if passed unrecognized output style' do
-    expected = %Q{<p><img src="/images/foo.png" alt="foo.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></p>\n}
 
     # the _only_ recognized override is :xml (case-sensitive)
     @parser.parse('{{foo.png}}', :output_style => :html).should == expected
@@ -64,12 +64,12 @@ describe Wikitext::Parser, 'embedding img tags' do
   end
 
   it 'should appear embedded in an inline flow' do
-    expected = %Q{<p>before <img src="/images/foo.png" alt="foo.png"> after</p>\n}
+    expected = %Q{<p>before <span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span> after</p>\n}
     @parser.parse('before {{foo.png}} after').should == expected
   end
 
   it 'should allow images in subdirectories' do
-    expected = %Q{<p><img src="/images/foo/bar.png" alt="foo/bar.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo/bar.png" alt="foo/bar.png"></span></span></p>\n}
     @parser.parse('{{foo/bar.png}}').should == expected
   end
 
@@ -78,14 +78,14 @@ describe Wikitext::Parser, 'embedding img tags' do
   end
 
   it 'should not append prefix if img src starts with a slash' do
-    expected = %Q{<p><img src="/foo.png" alt="/foo.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/foo.png" alt="/foo.png"></span></span></p>\n}
     @parser.parse('{{/foo.png}}').should == expected
   end
 
   it 'should work in BLOCKQUOTE blocks' do
     expected = dedent <<-END
       <blockquote>
-        <p><img src="/images/foo.png" alt="foo.png"></p>
+        <p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></p>
       </blockquote>
     END
     @parser.parse('> {{foo.png}}').should == expected
@@ -99,9 +99,9 @@ describe Wikitext::Parser, 'embedding img tags' do
     END
     expected = dedent <<-END
       <ul>
-        <li><img src="/images/foo.png" alt="foo.png"></li>
-        <li><img src="/images/bar.png" alt="bar.png"></li>
-        <li><img src="/images/baz.png" alt="baz.png"></li>
+        <li><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></li>
+        <li><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/bar.png" alt="bar.png"></span></span></li>
+        <li><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/baz.png" alt="baz.png"></span></span></li>
       </ul>
     END
     @parser.parse(input).should == expected
@@ -115,41 +115,41 @@ describe Wikitext::Parser, 'embedding img tags' do
     END
     expected = dedent <<-END
       <ol>
-        <li><img src="/images/foo.png" alt="foo.png"></li>
-        <li><img src="/images/bar.png" alt="bar.png"></li>
-        <li><img src="/images/baz.png" alt="baz.png"></li>
+        <li><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></li>
+        <li><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/bar.png" alt="bar.png"></span></span></li>
+        <li><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/baz.png" alt="baz.png"></span></span></li>
       </ol>
     END
     @parser.parse(input).should == expected
   end
 
   it 'should work in <h1> headings' do
-    expected = %Q{<h1><img src="/images/foo.png" alt="foo.png"></h1>\n}
+    expected = %Q{<h1><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></h1>\n}
     @parser.parse('= {{foo.png}} =').should == expected
   end
 
   it 'should work in <h2> headings' do
-    expected = %Q{<h2><img src="/images/foo.png" alt="foo.png"></h2>\n}
+    expected = %Q{<h2><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></h2>\n}
     @parser.parse('== {{foo.png}} ==').should == expected
   end
 
   it 'should work in <h3> headings' do
-    expected = %Q{<h3><img src="/images/foo.png" alt="foo.png"></h3>\n}
+    expected = %Q{<h3><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></h3>\n}
     @parser.parse('=== {{foo.png}} ===').should == expected
   end
 
   it 'should work in <h4> headings' do
-    expected = %Q{<h4><img src="/images/foo.png" alt="foo.png"></h4>\n}
+    expected = %Q{<h4><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></h4>\n}
     @parser.parse('==== {{foo.png}} ====').should == expected
   end
 
   it 'should work in <h5> headings' do
-    expected = %Q{<h5><img src="/images/foo.png" alt="foo.png"></h5>\n}
+    expected = %Q{<h5><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></h5>\n}
     @parser.parse('===== {{foo.png}} =====').should == expected
   end
 
   it 'should work in <h6> headings' do
-    expected = %Q{<h6><img src="/images/foo.png" alt="foo.png"></h6>\n}
+    expected = %Q{<h6><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span></h6>\n}
     @parser.parse('====== {{foo.png}} ======').should == expected
   end
 
@@ -182,7 +182,7 @@ describe Wikitext::Parser, 'embedding img tags' do
   end
 
   it 'should not be allowed as an external link target' do
-    expected = %Q{<p>[<img src="/images/foo.png" alt="foo.png"> the link]</p>\n}
+    expected = %Q{<p>[<span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo.png" alt="foo.png"></span></span> the link]</p>\n}
     @parser.parse('[{{foo.png}} the link]').should == expected
   end
 
@@ -197,7 +197,7 @@ describe Wikitext::Parser, 'embedding img tags' do
   end
 
   it 'should not allow embedded spaces' do
-    @parser.parse('{{foo bar.png}}').should == %Q{<p>{{foo bar.png}}</p>\n}
+    @parser.parse('{{foo bar.png}}').should == %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/images/foo bar.png" alt="foo bar.png"></span></span></p>\n}
   end
 
   it 'should not allow characters beyond printable ASCII' do
@@ -206,37 +206,37 @@ describe Wikitext::Parser, 'embedding img tags' do
 
   it 'should allow overrides of the image prefix at initialization time' do
     parser = Wikitext::Parser.new(:img_prefix => '/gfx/')
-    expected = %Q{<p><img src="/gfx/foo.png" alt="foo.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/gfx/foo.png" alt="foo.png"></span></span></p>\n}
     parser.parse('{{foo.png}}').should == expected
   end
 
   it 'should suppress the image prefix if passed an empty string at initialization time' do
     parser = Wikitext::Parser.new(:img_prefix => '')
-    expected = %Q{<p><img src="foo.png" alt="foo.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="foo.png" alt="foo.png"></span></span></p>\n}
     parser.parse('{{foo.png}}').should == expected
   end
 
   it 'should suppress image prefix if passed nil at initialization time' do
     parser = Wikitext::Parser.new(:img_prefix => nil)
-    expected = %Q{<p><img src="foo.png" alt="foo.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="foo.png" alt="foo.png"></span></span></p>\n}
     parser.parse('{{foo.png}}').should == expected
   end
 
   it 'should allow overrides of the image prefix after initialization' do
     @parser.img_prefix = '/gfx/'
-    expected = %Q{<p><img src="/gfx/foo.png" alt="foo.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="/gfx/foo.png" alt="foo.png"></span></span></p>\n}
     @parser.parse('{{foo.png}}').should == expected
   end
 
   it 'should suppress image if prefix set to an empty string after initialization' do
     @parser.img_prefix = ''
-    expected = %Q{<p><img src="foo.png" alt="foo.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="foo.png" alt="foo.png"></span></span></p>\n}
     @parser.parse('{{foo.png}}').should == expected
   end
 
   it 'should suppress image if prefix set to nil after initialization' do
     @parser.img_prefix = nil
-    expected = %Q{<p><img src="foo.png" alt="foo.png"></p>\n}
+    expected = %Q{<p><span class="wikitext-figure"><span class="wikitext-figure-inner"><img  class="wikitext-image" src="foo.png" alt="foo.png"></span></span></p>\n}
     @parser.parse('{{foo.png}}').should == expected
   end
 end

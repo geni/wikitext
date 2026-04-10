@@ -1,4 +1,4 @@
-# Copyright 2010-2013 Wincent Colaiuta. All rights reserved.
+# Copyright 2010-present Greg Hurrell. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -27,12 +27,11 @@ require 'wikitext/version'
 Gem::Specification.new do |s|
   s.name                  = 'wikitext'
   s.version               =  Wikitext::VERSION
-  s.author                = 'Wincent Colaiuta'
-  s.email                 = 'win@wincent.com'
-  s.homepage              = 'https://wincent.com/products/wikitext'
-  s.rubyforge_project     = 'wikitext'
+  s.author                = 'Greg Hurrell'
+  s.email                 = 'greg@hurrell.net'
+  s.homepage              = 'https://github.com/wincent/wikitext'
   s.platform              = Gem::Platform::RUBY
-  s.license               = 'BSD'
+  s.license               = 'BSD-2-Clause'
   s.required_ruby_version = '>= 2.0.0'
   s.summary               = 'Wikitext-to-HTML translator'
   s.require_paths         = ['ext', 'lib']
@@ -43,16 +42,19 @@ Gem::Specification.new do |s|
     'ext/wikitext/*.{rb,c,h}',
     'ext/wikitext/depend',
     'lib/wikitext/*.rb',
-    'rails/init.rb',
     'spec/*.rb',
   ]
   s.description           = <<-DESC
     Wikitext is a fast wikitext-to-HTML translator written in C.
   DESC
+  s.metadata              = {
+    'documentation_uri'   => 'http://wincent.github.io/wikitext/',
+    'bug_tracker_uri'     => 'https://github.com/wincent/wikitext/issues',
+    'changelog_uri'       => 'https://github.com/wincent/wikitext/releases',
+    'homepage_uri'        => 'https://github.com/wincent/wikitext',
+    'source_code_uri'     => 'https://github.com/wincent/wikitext',
+  }
   s.add_development_dependency 'rake'
-  s.add_development_dependency 'rspec'
-  s.add_development_dependency 'thor'
-  s.add_development_dependency 'yard'
-  s.add_development_dependency 'wopen3'
-  s.add_development_dependency 'ZenTest'
+  s.add_development_dependency 'rspec', '~> 3.0'
+  s.add_development_dependency 'yard', '~> 0.9'
 end

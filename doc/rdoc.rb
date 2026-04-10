@@ -119,6 +119,23 @@ module Wikitext
   #     !!!html
   #     http://apple.com/
   #
+  # == +pre_code+ (boolean)
+  #
+  # When true, "pre" blocks are formatted using "code" elements. For example:
+  #
+  #     !!!wikitext
+  #     <pre>foo</pre>
+  #
+  # Produces:
+  #
+  #     !!!html
+  #     <pre><code>foo</code></pre>
+  #
+  # When +false+ (the default), it produces:
+  #
+  #     !!!html
+  #     <pre>foo</pre>
+  #
   # == +space_to_underscore+ (boolean)
   #
   # Whether spaces in link targets should be encoded normally or transformed
@@ -230,9 +247,7 @@ module Wikitext
   #     parser = Wikitext::Parser.new
   #     parser.link_proc = link_proc
   #
-  # Many more examples of link procs can be found in the spec suite:
-  #
-  # * http://git.wincent.com/wikitext.git/blob/HEAD:/spec/internal_link_spec.rb
+  # Many more examples of link procs can be found in the spec suite.
   class Parser
 
     # Sanitizes an internal link target for inclusion within the HTML
@@ -363,18 +378,6 @@ module Wikitext
     #                         CSS to links to produce "red links"
     #                         (documented above)
     def parse string, options = {}
-      # This is just a placeholder.
-      # See parser.c for the C source code to this method.
-    end
-
-    # Like the parse method transforms the UTF-8 input +string+ from
-    # wikitext markup into HTML, but doesn't return a result. This
-    # method is specifically designed for performance profiling so
-    # you shouldn't need to call it in practice. It parses the supplied
-    # string 100,000 times so as to provide enough sample data to make
-    # profiling useful while minimizing the influence of extraneous
-    # factors such as set-up code.
-    def profiling_parse string
       # This is just a placeholder.
       # See parser.c for the C source code to this method.
     end

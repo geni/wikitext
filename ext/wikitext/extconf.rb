@@ -1,4 +1,4 @@
-# Copyright 2008-2013 Wincent Colaiuta. All rights reserved.
+# Copyright 2008-present Greg Hurrell. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -26,10 +26,6 @@ require 'mkmf'
 def missing item
   puts "couldn't find #{item} (required)"
   exit 1
-end
-
-if RUBY_VERSION !~ /\A2\.[0-7]\./
-  raise "unsupported Ruby version: #{RUBY_VERSION}"
 end
 
 have_header('ruby.h') or missing 'ruby.h'

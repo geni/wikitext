@@ -1,4 +1,4 @@
-// Copyright 2007-2013 Wincent Colaiuta. All rights reserved.
+// Copyright 2007-present Greg Hurrell. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -61,6 +61,7 @@ typedef struct
     bool    pending_crlf;
     bool    autolink;
     bool    space_to_underscore;
+    bool    pre_code;
 } parser_t;
 
 const char null_str[]                   = { 0 };
@@ -185,6 +186,7 @@ parser_t *parser_new(void)
     parser->pending_crlf            = false;
     parser->autolink                = true;
     parser->space_to_underscore     = true;
+    parser->pre_code                = false;
     return parser;
 }
 
@@ -209,9 +211,9 @@ VALUE Wikitext_parser_tokenize(VALUE self, VALUE string)
         return Qnil;
     string = StringValue(string);
     VALUE tokens = rb_ary_new();
-    char *p = RSTRING_PTR(string);
+    unsigned char *p = (unsigned char *)RSTRING_PTR(string);
     long len = RSTRING_LEN(string);
-    char *pe = p + len;
+    unsigned char *pe = p + len;
     token_t token;
     next_token(&token, NULL, p, pe);
     rb_ary_push(tokens, wiki_token(&token));
@@ -229,9 +231,9 @@ VALUE Wikitext_parser_benchmarking_tokenize(VALUE self, VALUE string)
     if (NIL_P(string))
         return Qnil;
     string = StringValue(string);
-    char *p = RSTRING_PTR(string);
+    unsigned char *p = (unsigned char *)RSTRING_PTR(string);
     long len = RSTRING_LEN(string);
-    char *pe = p + len;
+    unsigned char *pe = p + len;
     token_t token;
     next_token(&token, NULL, p, pe);
     while (token.type != END_OF_FILE)
@@ -264,9 +266,9 @@ VALUE Wikitext_parser_fulltext_tokenize(int argc, VALUE *argv, VALUE self)
         min_len = 0;
 
     // set up scanner
-    char *p = RSTRING_PTR(string);
+    unsigned char *p = (unsigned char *)RSTRING_PTR(string);
     long len = RSTRING_LEN(string);
-    char *pe = p + len;
+    unsigned char *pe = p + len;
     token_t token;
     token_t *_token = &token;
     next_token(&token, NULL, p, pe);
@@ -702,6 +704,8 @@ void wiki_append_pre_start(parser_t *parser, token_t *token)
     }
     else
         str_append(parser->output, pre_start, sizeof(pre_start) - 1);
+    if (parser->pre_code)
+        str_append(parser->output, code_start, sizeof(code_start) - 1);
     ary_push(parser->scope, PRE_START);
     ary_push(parser->line, PRE_START);
 }
@@ -742,6 +746,8 @@ void wiki_pop_from_stack(parser_t *parser, str_t *target)
     {
         case PRE:
         case PRE_START:
+            if (parser->pre_code)
+                str_append(target, code_end, sizeof(code_end) - 1);
             str_append(target, pre_end, sizeof(pre_end) - 1);
             str_append_str(target, parser->line_ending);
             wiki_dedent(parser, false);
@@ -1190,6 +1196,7 @@ VALUE Wikitext_parser_initialize(int argc, VALUE *argv, VALUE self)
     VALUE img_prefix                    = rb_str_new2("/images/");
     VALUE output_style                  = ID2SYM(rb_intern("html"));
     VALUE space_to_underscore           = Qtrue;
+    VALUE pre_code                      = Qfalse;
     VALUE minimum_fulltext_token_length = INT2NUM(3);
     VALUE base_heading_level            = INT2NUM(0);
 
@@ -1208,6 +1215,7 @@ VALUE Wikitext_parser_initialize(int argc, VALUE *argv, VALUE self)
         img_prefix                      = OVERRIDE_IF_SET(img_prefix);
         output_style                    = OVERRIDE_IF_SET(output_style);
         space_to_underscore             = OVERRIDE_IF_SET(space_to_underscore);
+        pre_code                        = OVERRIDE_IF_SET(pre_code);
         minimum_fulltext_token_length   = OVERRIDE_IF_SET(minimum_fulltext_token_length);
         base_heading_level              = OVERRIDE_IF_SET(base_heading_level);
     }
@@ -1223,16 +1231,10 @@ VALUE Wikitext_parser_initialize(int argc, VALUE *argv, VALUE self)
     rb_iv_set(self, "@img_prefix",                      img_prefix);
     rb_iv_set(self, "@output_style",                    output_style);
     rb_iv_set(self, "@space_to_underscore",             space_to_underscore);
+    rb_iv_set(self, "@pre_code",                        pre_code);
     rb_iv_set(self, "@minimum_fulltext_token_length",   minimum_fulltext_token_length);
     rb_iv_set(self, "@base_heading_level",              base_heading_level);
     return self;
-}
-
-VALUE Wikitext_parser_profiling_parse(VALUE self, VALUE string)
-{
-    for (int i = 0; i < 100000; i++)
-        Wikitext_parser_parse(1, &string, self);
-    return Qnil;
 }
 
 // convert a Ruby object (:xml, :html etc) into an int output style
@@ -1321,9 +1323,9 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
         base_heading_level = 6;
 
     // set up scanner
-    char *p = RSTRING_PTR(string);
+    unsigned char *p = (unsigned char *)RSTRING_PTR(string);
     long len = RSTRING_LEN(string);
-    char *pe = p + len;
+    unsigned char *pe = p + len;
 
     // set up parser struct to make passing parameters a little easier
     parser_t *parser                = parser_new();
@@ -1334,6 +1336,7 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
     parser->img_prefix              = rb_iv_get(self, "@img_prefix");
     parser->autolink                = rb_iv_get(self, "@autolink") == Qtrue ? true : false;
     parser->space_to_underscore     = rb_iv_get(self, "@space_to_underscore") == Qtrue ? true : false;
+    parser->pre_code                = rb_iv_get(self, "@pre_code") == Qtrue ? true : false;
     parser->line_ending             = str_new_from_string(line_ending);
     parser->base_indent             = base_indent;
     parser->base_heading_level      = base_heading_level;
@@ -1435,6 +1438,8 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
                     wiki_pop_from_stack_up_to(parser, NULL, BLOCKQUOTE, false);
                     wiki_indent(parser);
                     str_append(parser->output, pre_start, sizeof(pre_start) - 1);
+                    if (parser->pre_code)
+                        str_append(parser->output, code_start, sizeof(code_start) - 1);
                     ary_push(parser->scope, PRE);
                 }
                 break;
@@ -2836,16 +2841,29 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
         // reset current token; forcing lexer to return another token at the top of the loop
         token = NULL;
     } while (1);
+
 return_output:
-    // nasty hack to avoid re-allocating our return value
-    str_append(parser->output, null_str, 1); // null-terminate
-    len = parser->output->len - 1; // don't count null termination
+    str_append(parser->output, null_str, 1); // Null-terminate.
+#if defined(RUBY_API_VERSION_CODE) && RUBY_API_VERSION_CODE >= 30200
+    // Ruby string internals changed around 3.2, ending the 14-year non-breaking
+    // streak mentioned in 10808fef5921b7acff203da4fdaa0fdbaec2f603.
+    //
+    // Instead of hackily trying to avoid a reallocation, just eat the cost and
+    // create a new string (Ruby will copy the data). Ruby has gotten faster
+    // over the years anyway, and we can hope that the cost of parsing outweighs
+    // the allocation and copying.
+    return rb_str_new(parser->output->ptr, parser->output->len - 1);
+#else
+    // Nasty hack to avoid re-allocating our return value by reaching into Ruby
+    // string internals.
+    len = parser->output->len - 1; // Don't count null termination.
 
     VALUE out = rb_str_buf_new(RSTRING_EMBED_LEN_MAX + 1);
     free(RSTRING_PTR(out));
     RSTRING(out)->as.heap.aux.capa = len;
     RSTRING(out)->as.heap.ptr = parser->output->ptr;
     RSTRING(out)->as.heap.len = len;
-    parser->output->ptr = NULL; // don't double-free
+    parser->output->ptr = NULL; // Don't double-free.
     return out;
+#endif
 }

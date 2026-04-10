@@ -1,4 +1,4 @@
-# Copyright 2007-2013 Wincent Colaiuta. All rights reserved.
+# Copyright 2007-present Greg Hurrell. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -81,21 +81,12 @@ end
 
 desc 'Run specs'
 task :spec => :make do
-  sh 'bin/rspec spec'
+  sh 'bundle exec rspec spec'
 end
 
 desc 'Build the YARD HTML files'
 task :yard do
-  sh 'bin/yardoc -o html --title Wikitext doc/*.rb - doc/RELEASE-NOTES'
-end
-
-desc 'Upload YARD HTML'
-task :upload_yard => :yard do
-  require 'yaml'
-  config = YAML.load_file('.config.yml')
-  raise ':yardoc_host not configured' unless config.has_key?(:yardoc_host)
-  raise ':yardoc_path not configured' unless config.has_key?(:yardoc_path)
-  sh "scp -r html/* #{config[:yardoc_host]}:#{config[:yardoc_path]}"
+  sh 'bundle exec yardoc -o gh-pages --title Wikitext doc/*.rb - doc/RELEASE-NOTES'
 end
 
 desc 'Build gem ("gem build")'
@@ -103,7 +94,7 @@ task :build => :make do
   system 'gem build wikitext.gemspec'
 end
 
-desc 'Push gem to Gemcutter ("gem push")'
+desc 'Publish gem ("gem push")'
 task :push => :build do
   system "gem push wikitext-#{Wikitext::VERSION}.gem"
 end

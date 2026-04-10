@@ -1,4 +1,4 @@
-// Copyright 2008-2013 Wincent Colaiuta. All rights reserved.
+// Copyright 2008-present Greg Hurrell. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -35,28 +35,11 @@ VALUE cWikitextParserToken   = 0;   // class Wikitext::Parser::Token
 //     require 'wikitext/rails_template_handler'
 //   end
 //
-// here in C we have to jump through some hoops using the following two
-// functions.
-//
-// First we have wikitext_on_load_block(), which is a function which defines
-// the "block" of code that we want to have evaluated.
-//
-// To actually pass this block in to the ActiveSupport::on_load method we
-// need the help of an intermediate helper function,
-// wikitext_block_forwarder(), which we invoke with the aid of rb_iterate()
-// later on.
-//
-// This works because the rb_funcall() function in wikitext_block_forwarder()
-// propagates the block through to the called method.
-VALUE wikitext_on_load_block(VALUE yielded, VALUE other)
+// We use rb_block_call to call the on_load method with a block.
+// The wikitext_on_load_block() function defines the block code.
+VALUE wikitext_on_load_block(VALUE yielded, VALUE data, int argc, const VALUE *argv, VALUE blockarg)
 {
     return rb_require("wikitext/rails_template_handler");
-}
-
-VALUE wikitext_block_forwarder(VALUE receiver)
-{
-    return rb_funcall(receiver, rb_intern("on_load"), 1,
-        ID2SYM(rb_intern("action_view")));
 }
 
 void Init_wikitext()
@@ -68,7 +51,6 @@ void Init_wikitext()
     cWikitextParser = rb_define_class_under(mWikitext, "Parser", rb_cObject);
     rb_define_method(cWikitextParser, "initialize", Wikitext_parser_initialize, -1);
     rb_define_method(cWikitextParser, "parse", Wikitext_parser_parse, -1);
-    rb_define_method(cWikitextParser, "profiling_parse", Wikitext_parser_profiling_parse, 1);
     rb_define_method(cWikitextParser, "tokenize", Wikitext_parser_tokenize, 1);
     rb_define_method(cWikitextParser, "benchmarking_tokenize", Wikitext_parser_benchmarking_tokenize, 1);
     rb_define_method(cWikitextParser, "fulltext_tokenize", Wikitext_parser_fulltext_tokenize, -1);
@@ -111,15 +93,10 @@ void Init_wikitext()
         rb_require("wikitext/nil_class");
         rb_require("wikitext/string");
 
-        // now check for Rails version
         VALUE active_support = rb_const_get(rb_cObject,
             rb_intern("ActiveSupport"));
-        if (rb_respond_to(active_support, rb_intern("on_load")))
-            // running under Rails 3
-            rb_iterate(wikitext_block_forwarder, active_support,
-                wikitext_on_load_block, Qnil);
-        else
-            // running under Rails 2
-            rb_require("wikitext/rails_template_handler");
+        VALUE arg = ID2SYM(rb_intern("action_view"));
+        rb_block_call(active_support, rb_intern("on_load"), 1, &arg,
+            wikitext_on_load_block, Qnil);
     }
 }

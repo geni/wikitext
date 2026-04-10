@@ -438,6 +438,13 @@ The Wikitext extension provides a template handler so that templates named
 following the <tt>template_name.html.wikitext</tt> format will automatically be
 translated from wikitext markup into HTML when rendered.
 
+Additionally, an optional Haml filter is available if you <tt>require
+"wikitext/haml_filter"</tt>, which enables you to write wikitext markup inline
+(in Haml):
+
+    :wikitext
+      = Here is some [[wikitext]] =
+
 Likewise, a +to_wikitext+ method (aliased as +w+) is added to the +String+
 class (and also +NilClass+, for convenience) so that content can be easily
 translated from inside view templates following patterns like:
@@ -490,20 +497,20 @@ Add a line like the following to your Gemfile:
 
 = Links
 
-* RubyForge project page: http://rubyforge.org/projects/wikitext
-* RDoc: http://wikitext.rubyforge.org
-* Source: http://git.wincent.com/wikitext.git
+* Website: http://wincent.github.io/wikitext/
+* RDoc: http://wincent.github.io/wikitext/
+* Source: https://github.com/wincent/wikitext
 
 = Author
 
-Wikitext is written and maintained by Wincent Colaiuta (win@wincent.com).
+Wikitext is written and maintained by Greg Hurrell (greg@hurrell.net).
 Other contributors that have submitted patches include:
 
 * Mike Stangel
 
 = License
 
-Copyright 2007-2013 Wincent Colaiuta. All rights reserved.
+Copyright 2007-present Greg Hurrell. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -530,9 +537,4 @@ POSSIBILITY OF SUCH DAMAGE.
 
 Please let me know if you're using the Wikitext extension in your project.
 If you have any bug reports or feature requests please open a ticket in
-the issue tracker at https://wincent.com/issues.
-
-= Donations
-
-If you find this extension useful, please consider making a donation via
-PayPal to win@wincent.com.
+the issue tracker at https://github.com/wincent/wikitext/issues.

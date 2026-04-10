@@ -1,4 +1,4 @@
-# Copyright 2007-present Greg Hurrell. All rights reserved.
+# Copyright 2014-present Greg Hurrell. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -21,27 +21,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-require 'spec_helper'
+require 'wikitext/string'
 
-describe Wikitext::Parser, 'parsing entities' do
-  before do
-    @parser = Wikitext::Parser.new
-  end
+module Haml::Filters::Wikitext
+  include Haml::Filters::Base
 
-  it 'should pass numeric (decimal) entities through unchanged' do
-    @parser.parse('&#8364;').should == "<p>&#8364;</p>\n"
+  def render(text)
+    html = text.w
+    html.respond_to?(:html_safe) ? html.html_safe : html
   end
-
-  it 'should normalize case variations in hexadecimal entities' do
-    @parser.parse('&#x20ac;').should == "<p>&#x20ac;</p>\n"
-    @parser.parse('&#x20AC;').should == "<p>&#x20ac;</p>\n"
-    @parser.parse('&#X20ac;').should == "<p>&#x20ac;</p>\n"
-    @parser.parse('&#X20AC;').should == "<p>&#x20ac;</p>\n"
-  end
-
-  it 'should pass named entities through unchanged' do
-    @parser.parse('&Aacute;').should == "<p>&Aacute;</p>\n" # these are two different entities
-    @parser.parse('&aacute;').should == "<p>&aacute;</p>\n" # ie. they are case sensitive
-    @parser.parse('&euro;').should == "<p>&euro;</p>\n"
-  end
-end
+end # module Haml::Filters::Wikitext

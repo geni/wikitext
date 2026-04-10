@@ -27,11 +27,27 @@ require 'wikitext/string'
 module ActionView
   class Template
     module Handlers
-      class Wikitext
-        def self.call(template)
-          "'" + template.source.w.gsub("'", "\\\\'") + "'"
-        end
-      end # class Wikitext
+
+      begin
+        # Try Rails 3+ API first
+        class Wikitext < Handler
+          include Compilable
+
+          def compile(template)
+            "'" + template.source.w.gsub("'", "\\\\'") + "'"
+          end
+        end # class Wikitext
+
+      rescue NameError
+        # Fall back to Rails 2 API
+        class Wikitext
+          def self.call(template)
+            'template.source.w'
+          end
+        end # class Wikitext
+
+      end
+
     end # module Handlers
   end # class Template
 end # module ActionView

@@ -95,8 +95,18 @@ void Init_wikitext()
 
         VALUE active_support = rb_const_get(rb_cObject,
             rb_intern("ActiveSupport"));
-        VALUE arg = ID2SYM(rb_intern("action_view"));
-        rb_block_call(active_support, rb_intern("on_load"), 1, &arg,
-            wikitext_on_load_block, Qnil);
+        // Check for Rails version: Rails 3+ has ActiveSupport.on_load
+        if (rb_respond_to(active_support, rb_intern("on_load")))
+        {
+            // Rails 3+: use on_load hook
+            VALUE arg = ID2SYM(rb_intern("action_view"));
+            rb_block_call(active_support, rb_intern("on_load"), 1, &arg,
+                wikitext_on_load_block, Qnil);
+        }
+        else
+        {
+            // Rails 2: directly require template handler
+            rb_require("wikitext/rails_template_handler");
+        }
     }
 }

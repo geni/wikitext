@@ -47,5 +47,9 @@ describe Wikitext::Parser, 'parsing paragraphs' do
   it 'should not translate single line breaks into spaces when they appear at the end of a paragraph' do
     @parser.parse("foo\n").should == "<p>foo</p>\n"
   end
+
+  it 'should add wikitext-br class to HTML br' do
+    @parser.parse("foo<br>bar").should == "<p>foo<br class=\"wikitext-br\" />bar</p>\n"
+  end
 end
 

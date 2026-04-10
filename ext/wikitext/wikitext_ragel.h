@@ -23,4 +23,4 @@
 
 #include "token.h"
 
-void next_token(token_t *out, token_t *last_token, char *p, char *pe);
+void next_token(token_t *out, token_t *last_token, unsigned char *p, unsigned char *pe);

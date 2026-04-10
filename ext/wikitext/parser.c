@@ -191,9 +191,9 @@ VALUE Wikitext_parser_tokenize(VALUE self, VALUE string)
         return Qnil;
     string = StringValue(string);
     VALUE tokens = rb_ary_new();
-    char *p = RSTRING_PTR(string);
+    unsigned char *p = (unsigned char *)RSTRING_PTR(string);
     long len = RSTRING_LEN(string);
-    char *pe = p + len;
+    unsigned char *pe = p + len;
     token_t token;
     next_token(&token, NULL, p, pe);
     rb_ary_push(tokens, wiki_token(&token));
@@ -211,9 +211,9 @@ VALUE Wikitext_parser_benchmarking_tokenize(VALUE self, VALUE string)
     if (NIL_P(string))
         return Qnil;
     string = StringValue(string);
-    char *p = RSTRING_PTR(string);
+    unsigned char *p = (unsigned char *)RSTRING_PTR(string);
     long len = RSTRING_LEN(string);
-    char *pe = p + len;
+    unsigned char *pe = p + len;
     token_t token;
     next_token(&token, NULL, p, pe);
     while (token.type != END_OF_FILE)
@@ -246,9 +246,9 @@ VALUE Wikitext_parser_fulltext_tokenize(int argc, VALUE *argv, VALUE self)
         min_len = 0;
 
     // set up scanner
-    char *p = RSTRING_PTR(string);
+    unsigned char *p = (unsigned char *)RSTRING_PTR(string);
     long len = RSTRING_LEN(string);
-    char *pe = p + len;
+    unsigned char *pe = p + len;
     token_t token;
     token_t *_token = &token;
     next_token(&token, NULL, p, pe);
@@ -1146,9 +1146,9 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
         base_heading_level = 6;
 
     // set up scanner
-    char *p = RSTRING_PTR(string);
+    unsigned char *p = (unsigned char *)RSTRING_PTR(string);
     long len = RSTRING_LEN(string);
-    char *pe = p + len;
+    unsigned char *pe = p + len;
 
     // set up parser struct to make passing parameters a little easier
     parser_t *parser                = parser_new();

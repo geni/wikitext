@@ -29,8 +29,8 @@
 
 typedef struct
 {
-    char        *start;
-    char        *stop;
+    unsigned char *start;
+    unsigned char *stop;
     size_t      line_start;
     size_t      line_stop;
     size_t      column_start;

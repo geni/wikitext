@@ -40,6 +40,7 @@
 
 %%{
     machine wikitext;
+    alphtype unsigned char;
 
     action mark
     {
@@ -487,7 +488,7 @@
 // pass in the last token because that's useful for the scanner to know
 // p data pointer (required by Ragel machine); overriden with contents of last_token if supplied
 // pe data end pointer (required by Ragel machine)
-void next_token(token_t *out, token_t *last_token, char *p, char *pe)
+void next_token(token_t *out, token_t *last_token, unsigned char *p, unsigned char *pe)
 {
     int last_token_type = NO_TOKEN;
     if (last_token)
@@ -515,11 +516,11 @@ void next_token(token_t *out, token_t *last_token, char *p, char *pe)
         return;
     }
 
-    char    *mark;      // for manual backtracking
-    char    *eof = pe;  // required for backtracking (longest match determination)
+    unsigned char *mark;      // for manual backtracking
+    unsigned char *eof = pe;  // required for backtracking (longest match determination)
     int     cs;         // current state (standard Ragel)
-    char    *ts;        // token start (scanner)
-    char    *te;        // token end (scanner)
+    unsigned char *ts;        // token start (scanner)
+    unsigned char *te;        // token end (scanner)
     int     act;        // identity of last patterned matched (scanner)
     %% write init;
     %% write exec;

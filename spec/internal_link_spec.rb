@@ -97,7 +97,7 @@ describe Wikitext::Parser, 'internal links (space to underscore off)' do
   end
 
   it 'should handle mixed scenarios (quotes, ampersands, non-ASCII characers)' do
-    expected = %Q{<p><a href="/wiki/foo%2c%20%22bar%22%20%26%20baz%20%e2%82%ac">foo, &quot;bar&quot; &amp; baz &#x20ac;</a></p>\n}
+    expected = %Q{<p><a href="/wiki/foo%2c%20%22bar%22%20%26%20baz%20%e2%82%ac">foo, &quot;bar&quot; &amp; baz €</a></p>\n}
     @parser.parse('[[foo, "bar" & baz €]]').should == expected
   end
 
@@ -226,13 +226,13 @@ describe Wikitext::Parser, 'internal links (space to underscore off)' do
 
     it 'handles link targets with encoded parts (Proc object version)' do
       link_proc = proc { |target| target == 'información' ? 'redlink' : nil }
-      expected = %Q{<p><a href="/wiki/informaci%c3%b3n" class="redlink">informaci&#x00f3;n</a> <a href="/wiki/bar">bar</a></p>\n}
+      expected = %Q{<p><a href="/wiki/informaci%c3%b3n" class="redlink">información</a> <a href="/wiki/bar">bar</a></p>\n}
       @parser.parse('[[información]] [[bar]]', link_proc: link_proc).should == expected
     end
 
     it 'should handle link targets with encoded parts (lambda version)' do
       link_proc = lambda { |target| target == 'información' ? 'redlink' : nil }
-      expected = %Q{<p><a href="/wiki/informaci%c3%b3n" class="redlink">informaci&#x00f3;n</a> <a href="/wiki/bar">bar</a></p>\n}
+      expected = %Q{<p><a href="/wiki/informaci%c3%b3n" class="redlink">información</a> <a href="/wiki/bar">bar</a></p>\n}
       @parser.parse('[[información]] [[bar]]', :link_proc => link_proc).should == expected
     end
   end
@@ -655,7 +655,7 @@ describe Wikitext::Parser, 'internal links (space to underscore on)' do
   end
 
   it 'should handle mixed scenarios (quotes, ampersands, non-ASCII characers)' do
-    expected = %Q{<p><a href="/wiki/foo%2c_%22bar%22_%26_baz_%e2%82%ac">foo, &quot;bar&quot; &amp; baz &#x20ac;</a></p>\n}
+    expected = %Q{<p><a href="/wiki/foo%2c_%22bar%22_%26_baz_%e2%82%ac">foo, &quot;bar&quot; &amp; baz €</a></p>\n}
     @parser.parse('[[foo, "bar" & baz €]]').should == expected
   end
 
@@ -764,13 +764,13 @@ describe Wikitext::Parser, 'internal links (space to underscore on)' do
 
     it 'should handle link targets with encoded parts (Proc object version)' do
       link_proc = Proc.new { |target| target == 'información' ? 'redlink' : nil }
-      expected = %Q{<p><a href="/wiki/informaci%c3%b3n" class="redlink">informaci&#x00f3;n</a> <a href="/wiki/bar">bar</a></p>\n}
+      expected = %Q{<p><a href="/wiki/informaci%c3%b3n" class="redlink">información</a> <a href="/wiki/bar">bar</a></p>\n}
       @parser.parse('[[información]] [[bar]]', :link_proc => link_proc).should == expected
     end
 
     it 'handles link targets with encoded parts (lambda version)' do
       link_proc = lambda { |target| target == 'información' ? 'redlink' : nil }
-      expected = %Q{<p><a href="/wiki/informaci%c3%b3n" class="redlink">informaci&#x00f3;n</a> <a href="/wiki/bar">bar</a></p>\n}
+      expected = %Q{<p><a href="/wiki/informaci%c3%b3n" class="redlink">información</a> <a href="/wiki/bar">bar</a></p>\n}
       @parser.parse('[[información]] [[bar]]', link_proc: link_proc).should == expected
     end
   end

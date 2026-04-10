@@ -22,6 +22,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include "str.h"
+#include <ruby/encoding.h>
 
 // when allocating memory, reserve a little more than was asked for,
 // which can help to avoid subsequent allocations
@@ -55,7 +56,7 @@ str_t *str_new_from_string(VALUE string)
 VALUE string_from_str(str_t *str)
 {
     VALUE string = rb_str_new(str->ptr, str->len);
-    rb_funcall(string, rb_intern("force_encoding"), 1, rb_str_new2("UTF-8"));
+    rb_enc_set_index(string, rb_enc_find_index("UTF-8"));
     return string;
 }
 

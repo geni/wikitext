@@ -79,7 +79,13 @@
     domain              = (alnum+ '.')+ tld ;
     mail                = user '@' domain ;
 
-    uri_chars           = (alnum | [@$&'(\*\+=%_~/#] | '-')+ ;
+    # UTF-8 character sequences for international characters in URIs
+    utf8_2byte          = 0xc2..0xdf 0x80..0xbf ;
+    utf8_3byte          = 0xe0..0xef 0x80..0xbf 0x80..0xbf ;
+    utf8_4byte          = 0xf0..0xf4 0x80..0xbf 0x80..0xbf 0x80..0xbf ;
+    utf8_char           = utf8_2byte | utf8_3byte | utf8_4byte ;
+
+    uri_chars           = (alnum | [@$&'(\*\+=%_~/#] | '-' | utf8_char)+ ;
     special_uri_chars   = ([:!\(\),;\.\?])+ ;
     uri                 = ('mailto:'i mail) |
                           (('http'i [sS]? '://' | 'ftp://'i | 'svn://'i) uri_chars (special_uri_chars uri_chars)*) ;

@@ -211,9 +211,14 @@ describe Wikitext::Parser, 'external links' do
     @parser.parse(%Q{[http://google.com/ Google &#x20ac;]}).should == expected
   end
 
-  it 'should convert non-ASCII characters in the link text into entities' do
-    expected = %Q{<p><a href="http://google.com/" class="external">Google &#x20ac;</a></p>\n}
+  it 'should preserve non-ASCII characters in the link text' do
+    expected = %Q{<p><a href="http://google.com/" class="external">Google €</a></p>\n}
     @parser.parse(%Q{[http://google.com/ Google €]}).should == expected
+  end
+
+  it 'should preserve Unicode characters in links' do
+    expected = %Q{<p><a href="https://ru.wikipedia.org/wiki/Русская_Википедия" class="external">ВИКИПЕДИЯ</a></p>\n}
+    @parser.parse('[https://ru.wikipedia.org/wiki/Русская_Википедия ВИКИПЕДИЯ]').should == expected
   end
 
   it 'should pass through unexpected external link end tokens literally' do

@@ -92,12 +92,12 @@ describe Wikitext, 'sanitizing a link target' do
     Wikitext::Parser.sanitize_link_target('hello & goodbye').should == 'hello &amp; goodbye'
   end
 
-  it 'should convert non-ASCII hexadecimal entities' do
-    Wikitext::Parser.sanitize_link_target('cañon').should == 'ca&#x00f1;on'
+  it 'should preserve non-ASCII characters' do
+    Wikitext::Parser.sanitize_link_target('cañon').should == 'cañon'
   end
 
   it 'should handle mixed scenarios (ampersands, double-quotes and non-ASCII)' do
-    Wikitext::Parser.sanitize_link_target('foo, "bar" & baz €').should == 'foo, &quot;bar&quot; &amp; baz &#x20ac;'
+    Wikitext::Parser.sanitize_link_target('foo, "bar" & baz €').should == 'foo, &quot;bar&quot; &amp; baz €'
   end
 
   # here we're exercising the wiki_utf8_to_utf32 function

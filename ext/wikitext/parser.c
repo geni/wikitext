@@ -28,6 +28,7 @@
 #include "str.h"
 #include "wikitext.h"
 #include "wikitext_ragel.h"
+#include <ruby/encoding.h>
 
 #define IN(type) ary_includes(parser->scope, type)
 #define IN_EITHER_OF(type1, type2) ary_includes2(parser->scope, type1, type2)
@@ -437,7 +438,17 @@ void wiki_append_sanitized_link_target(str_t *link_target, str_t *output, bool t
             *(output->ptr + output->len) = *src;
             output->len++;
         }
-        else    // all others: must convert to entities
+        else if ((*src & 0x80) != 0)    // UTF-8 multi-byte sequence
+        {
+            // pass through UTF-8 characters unchanged for modern URL support
+            long width;
+            wiki_utf8_to_utf32(src, end, &width);  // validate UTF-8 sequence
+            str_append(output, src, width);
+            src         += width;
+            non_space   = output->ptr + output->len;
+            continue;
+        }
+        else    // all others (control characters): convert to entities
         {
             long        width;
             wiki_append_entity_from_utf32_char(output, wiki_utf8_to_utf32(src, end, &width));
@@ -2819,7 +2830,11 @@ VALUE Wikitext_parser_parse(int argc, VALUE *argv, VALUE self)
                 output = parser->capture ? parser->capture : parser->output;
                 wiki_pop_excess_elements(parser);
                 wiki_start_para_if_necessary(parser);
-                wiki_append_entity_from_utf32_char(output, token->code_point);
+                // When capturing link text in external links, preserve UTF-8 characters
+                if (parser->capture && IN(EXT_LINK_START))
+                    str_append(output, token->start, TOKEN_LEN(token));
+                else
+                    wiki_append_entity_from_utf32_char(output, token->code_point);
                 break;
 
             case END_OF_FILE:
@@ -2852,7 +2867,9 @@ return_output:
     // create a new string (Ruby will copy the data). Ruby has gotten faster
     // over the years anyway, and we can hope that the cost of parsing outweighs
     // the allocation and copying.
-    return rb_str_new(parser->output->ptr, parser->output->len - 1);
+    VALUE out = rb_str_new(parser->output->ptr, parser->output->len - 1);
+    rb_enc_set_index(out, rb_enc_find_index("UTF-8"));
+    return out;
 #else
     // Nasty hack to avoid re-allocating our return value by reaching into Ruby
     // string internals.
@@ -2864,6 +2881,7 @@ return_output:
     RSTRING(out)->as.heap.ptr = parser->output->ptr;
     RSTRING(out)->as.heap.len = len;
     parser->output->ptr = NULL; // Don't double-free.
+    rb_enc_set_index(out, rb_enc_find_index("UTF-8"));
     return out;
 #endif
 }
